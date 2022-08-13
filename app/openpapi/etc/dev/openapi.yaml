@@ -1,0 +1,14 @@
+Name: openapi
+Host: 0.0.0.0
+Port: 8888
+Mode: dev
+
+# 务必要加parseTime=trues, 否则datetime/timestamp之类的类型只能解析成string/[]byte, 没法直接转成time.Time
+DataSource: pipiao:pipiao@tcp(localhost:3306)/pipiao?parseTime=true&loc=Asia/Shanghai
+Cache:
+  - Host: localhost:6379
+    Pass: '123456'
+
+Redis:
+  Host: localhost:6379
+  Pass: '123456'

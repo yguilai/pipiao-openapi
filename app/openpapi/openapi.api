@@ -1,0 +1,20 @@
+syntax = "v1"
+
+type TranslateReq {
+	From string `path:"from"`
+}
+
+type TranslateResp {
+	Result string `json:"result"`
+}
+
+@server(
+	prefix: /wf/v1
+	group: translate
+	middleware: oauth
+)
+service openapi {
+	@doc "Warframe词条翻译"
+	@handler Translate
+	get /translate/:from (TranslateReq) returns (TranslateResp)
+}
