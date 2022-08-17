@@ -58,3 +58,7 @@ func (s *WfDictService) NeedFetch(ctx context.Context) (string, bool) {
     }
     return *ctt.DownloadURL, true
 }
+
+func (s *WfDictService) FetchDictData(downloadUrl string) map[string]*I18nEntry {
+    return nil
+}
