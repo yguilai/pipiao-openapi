@@ -1,20 +1,24 @@
 syntax = "v1"
 
 type TranslateReq {
-	From string `path:"from"`
+	// 要翻译的内容
+	Name string `path:"name"`
+	// 翻译的目标语言
+	Lang string `path:"lang"`
 }
 
 type TranslateResp {
 	Result string `json:"result"`
 }
 
+// goctl api go --api "openapi.api" --dir . --style "goZero"
 @server(
 	prefix: /wf/v1
 	group: translate
-	middleware: oauth
+	middleware: Oauth
 )
 service openapi {
 	@doc "Warframe词条翻译"
 	@handler Translate
-	get /translate/:from (TranslateReq) returns (TranslateResp)
+	get /translate/:name/lang/:lang (TranslateReq) returns (TranslateResp)
 }

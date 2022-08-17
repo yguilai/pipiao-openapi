@@ -2,7 +2,8 @@
 package types
 
 type TranslateReq struct {
-	From string `path:"from"`
+	Name string `path:"name"`
+	Lang string `path:"lang"`
 }
 
 type TranslateResp struct {

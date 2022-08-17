@@ -2,11 +2,12 @@
 package handler
 
 import (
-    "github.com/yguilai/pipiao-openapi/app/openpapi/internal/handler/translate"
-    "github.com/yguilai/pipiao-openapi/app/openpapi/internal/svc"
-    "net/http"
+	"net/http"
 
-    "github.com/zeromicro/go-zero/rest"
+	translate "github.com/yguilai/pipiao-openapi/app/openpapi/internal/handler/translate"
+	"github.com/yguilai/pipiao-openapi/app/openpapi/internal/svc"
+
+	"github.com/zeromicro/go-zero/rest"
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
@@ -16,7 +17,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Route{
 				{
 					Method:  http.MethodGet,
-					Path:    "/translate/:from",
+					Path:    "/translate/:name/lang/:lang",
 					Handler: translate.TranslateHandler(serverCtx),
 				},
 			}...,

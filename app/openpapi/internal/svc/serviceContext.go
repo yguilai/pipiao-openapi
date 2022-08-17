@@ -13,7 +13,7 @@ type ServiceContext struct {
     Config       config.Config
     Oauth        rest.Middleware
     OpenApiModel model.OpenapiAuthModel
-    WfDictModel  model.WfDictModel
+    WfItemModel  model.WfItemModel
     Redis        *redis.Redis
 }
 
@@ -33,7 +33,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
         Config:       c,
         Oauth:        middleware.NewOauthMiddleware(authModel).Handle,
         OpenApiModel: authModel,
-        WfDictModel:  model.NewWfDictModel(mysql, c.Cache),
+        WfItemModel:  model.NewWfItemModel(mysql, c.Cache),
         Redis:        c.Redis.NewRedis(),
     }
 }
