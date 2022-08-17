@@ -3,7 +3,7 @@ package cron
 import (
     "context"
     "github.com/robfig/cron/v3"
-    "github.com/yguilai/pipiao-openapi/app/openpapi/internal/rdHelper"
+    "github.com/yguilai/pipiao-openapi/app/openpapi/internal/biz"
     "github.com/yguilai/pipiao-openapi/app/openpapi/internal/svc"
     "github.com/yguilai/pipiao-openapi/common/xcron"
     "github.com/zeromicro/go-zero/core/logx"
@@ -14,7 +14,7 @@ type WfDictSyncTask struct {
     ctx        context.Context
     svcCtx     *svc.ServiceContext
     task       *cron.Cron
-    dictHelper *rdHelper.WfDictHelper
+    dictHelper *biz.WfDictService
 }
 
 func NewWfDictSyncTask(ctx context.Context, svcCtx *svc.ServiceContext) *WfDictSyncTask {
@@ -27,7 +27,7 @@ func NewWfDictSyncTask(ctx context.Context, svcCtx *svc.ServiceContext) *WfDictS
             cron.WithParser(cron.NewParser(cron.SecondOptional|cron.Minute|cron.Hour|cron.Dom|cron.Month|cron.Dow|cron.Descriptor)),
             cron.WithLogger(xcron.NewLogger(lg, svcCtx.IsDev())),
         ),
-        dictHelper: rdHelper.NewWfDictHelper(svcCtx.Redis),
+        dictHelper: biz.NewWfDictService(svcCtx.Redis),
     }
 }
 
@@ -48,7 +48,6 @@ func (t *WfDictSyncTask) Stop() {
 }
 
 func (t *WfDictSyncTask) fetchWfDictFromGithub() {
-    context.WithValue(t.ctx, "trace", "")
     downURL, isNeed := t.dictHelper.NeedFetch(t.ctx)
     if !isNeed || downURL == "" {
         t.Infof("本次任务无需更新词典")
