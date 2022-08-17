@@ -16,9 +16,9 @@ type OauthMiddleware struct {
 }
 
 const (
-    AuthorizationHeader = "Authorization"
-    AppIdHeader         = "x-open-appid"
-    AuthorizationPrefix = "Bearer "
+    authorizationHeader = "Authorization"
+    appIdHeader         = "x-open-appid"
+    authorizationPrefix = "Bearer "
 )
 
 func NewOauthMiddleware(m model.OpenapiAuthModel) *OauthMiddleware {
@@ -29,7 +29,7 @@ func (m *OauthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         m.Logger = logx.WithContext(r.Context())
         // token e.g: Bearer xxxxxx
-        token, err := m.verifyToken(r.Header.Get(AuthorizationHeader))
+        token, err := m.verifyToken(r.Header.Get(authorizationHeader))
         if err != nil {
             response.AuthorizationFailedResult(r, w, err)
             return
@@ -61,14 +61,14 @@ func (m *OauthMiddleware) verifyToken(token string) (string, error) {
     if token == "" {
         return "", xerr.NewErrorWithMsg("token不能为空")
     }
-    if !strings.HasPrefix(token, AuthorizationPrefix) {
+    if !strings.HasPrefix(token, authorizationPrefix) {
         return "", xerr.NewErrorWithMsg("token格式错误")
     }
-    return strings.ReplaceAll(token, AuthorizationPrefix, ""), nil
+    return strings.ReplaceAll(token, authorizationPrefix, ""), nil
 }
 
 func (m *OauthMiddleware) verifyAppIdAndGetAuth(r *http.Request) (*model.OpenapiAuth, error) {
-    appId := r.Header.Get(AppIdHeader)
+    appId := r.Header.Get(appIdHeader)
     if appId == "" {
         return nil, xerr.NewErrorWithMsg("appId不能为空")
     }

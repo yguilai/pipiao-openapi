@@ -5,6 +5,7 @@ import (
     "github.com/robfig/cron/v3"
     "github.com/yguilai/pipiao-openapi/app/openpapi/internal/biz"
     "github.com/yguilai/pipiao-openapi/app/openpapi/internal/svc"
+    "github.com/yguilai/pipiao-openapi/common/id"
     "github.com/yguilai/pipiao-openapi/common/xcron"
     "github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,7 +28,7 @@ func NewWfDictSyncTask(ctx context.Context, svcCtx *svc.ServiceContext) *WfDictS
             cron.WithParser(cron.NewParser(cron.SecondOptional|cron.Minute|cron.Hour|cron.Dom|cron.Month|cron.Dow|cron.Descriptor)),
             cron.WithLogger(xcron.NewLogger(lg, svcCtx.IsDev())),
         ),
-        dictHelper: biz.NewWfDictService(svcCtx.Redis),
+        dictHelper: biz.NewWfDictService(svcCtx.Redis, svcCtx.WfItemModel),
     }
 }
 
@@ -48,9 +49,15 @@ func (t *WfDictSyncTask) Stop() {
 }
 
 func (t *WfDictSyncTask) fetchWfDictFromGithub() {
-    downURL, isNeed := t.dictHelper.NeedFetch(t.ctx)
+    ctx := context.WithValue(t.ctx, "trace", id.SimpleUUID())
+    downURL, sha, isNeed := t.dictHelper.NeedFetch(ctx)
     if !isNeed || downURL == "" {
         t.Infof("本次任务无需更新词典")
+        return
+    }
+    err := t.dictHelper.StartUpdateTask(ctx, downURL, sha)
+    if err != nil {
+        t.Errorf("词条更新失败: %+v", err)
         return
     }
 }
