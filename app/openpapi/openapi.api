@@ -4,7 +4,8 @@ type TranslateReq {
 	// 要翻译的内容
 	Name string `path:"name"`
 	// 翻译的目标语言
-	Lang string `path:"lang"`
+	From   string `json:"from,options=zh|uk"`
+	Target string `json:"target,options=zh|uk"`
 }
 
 type TranslateResp {
@@ -20,5 +21,5 @@ type TranslateResp {
 service openapi {
 	@doc "Warframe词条翻译"
 	@handler Translate
-	get /translate/:name/lang/:lang (TranslateReq) returns (TranslateResp)
+	get /translate/:name (TranslateReq) returns (TranslateResp)
 }

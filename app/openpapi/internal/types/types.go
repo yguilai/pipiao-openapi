@@ -2,8 +2,9 @@
 package types
 
 type TranslateReq struct {
-	Name string `path:"name"`
-	Lang string `path:"lang"`
+	Name   string `path:"name"`
+	From   string `json:"from,options=zh|uk"`
+	Target string `json:"target,options=zh|uk"`
 }
 
 type TranslateResp struct {
