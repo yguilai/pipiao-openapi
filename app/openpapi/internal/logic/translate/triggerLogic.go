@@ -27,7 +27,6 @@ func NewTriggerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *TriggerLo
 }
 
 func (l *TriggerLogic) Trigger() (resp *types.TranslateResp, err error) {
-	// todo: add your logic here and delete this line
 	url, sha, need := l.dictService.NeedFetch(l.ctx)
 	if !need {
 		return nil, nil

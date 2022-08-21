@@ -51,7 +51,7 @@ func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha s
 	entries := make(collect.Slice[model.WfEntry], 0)
 	err = FetchData(downloadUrl, entries)
 	if err != nil {
-		return err
+		return xerr.NewErrorWithFormat("获取数据失败: %+v", err)
 	}
 	if len(entries) == 0 {
 		logx.WithContext(ctx).Infof("没有需要更新的数据\n")
@@ -64,7 +64,7 @@ func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha s
 		return err
 	}
 
-	_ = UpdateLastSHA(ctx, s.redis, WfAllEntry, sha, warframeEntryUpdateTaskExpire)
+	_ = UpdateLastSHA(ctx, s.redis, WfAllEntry, sha, warframeDictSyncSHARedisExpire)
 	logx.Errorf("更新上次Warframe字典文件SHA失败: %+v", err)
 	return nil
 }
