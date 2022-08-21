@@ -17,11 +17,22 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Route{
 				{
 					Method:  http.MethodGet,
-					Path:    "/translate/:name",
+					Path:    "/translate/zh/:name",
 					Handler: translate.TranslateHandler(serverCtx),
 				},
 			}...,
 		),
+		rest.WithPrefix("/wf/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/trigger",
+				Handler: translate.TriggerHandler(serverCtx),
+			},
+		},
 		rest.WithPrefix("/wf/v1"),
 	)
 }
