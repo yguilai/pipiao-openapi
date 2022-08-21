@@ -14,7 +14,7 @@ type TriggerI18nLogic struct {
 	logx.Logger
 	ctx         context.Context
 	svcCtx      *svc.ServiceContext
-	i18nService *syncs.WfI18nItemService
+	i18nService syncs.SyncService
 }
 
 func NewTriggerI18nLogic(ctx context.Context, svcCtx *svc.ServiceContext) *TriggerI18nLogic {

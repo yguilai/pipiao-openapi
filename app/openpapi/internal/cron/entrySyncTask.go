@@ -15,7 +15,7 @@ type WfEntrySyncTask struct {
 	ctx        context.Context
 	svcCtx     *svc.ServiceContext
 	task       *cron.Cron
-	syncHelper *syncs.WfEntrySyncService
+	syncHelper syncs.SyncService
 }
 
 func NewWfEntrySyncTask(ctx context.Context, svcCtx *svc.ServiceContext) *WfEntrySyncTask {

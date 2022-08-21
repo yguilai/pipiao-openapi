@@ -92,7 +92,7 @@ func NeedUpdate(oldKey string, newKey string) bool {
 	return hash.Md5Hex([]byte(oldKey)) != hash.Md5Hex([]byte(newKey))
 }
 
-func DoUpdate(ctx context.Context, m CommonSyncModel, newEntry interface{}, errch chan<- error) {
+func DoUpdate[T any](ctx context.Context, m *CommonSync[T], newEntry *T, errch chan<- error) {
 	oldEntry, err := m.FindOld(ctx, newEntry)
 	if err != nil && err != model.ErrNotFound {
 		errch <- err
@@ -100,7 +100,7 @@ func DoUpdate(ctx context.Context, m CommonSyncModel, newEntry interface{}, errc
 	}
 	// 说明是新增的
 	if err == model.ErrNotFound {
-		res, err := m.Add(ctx, newEntry)
+		res, err := m.Insert(ctx, newEntry)
 		if err != nil {
 			errch <- err
 			return

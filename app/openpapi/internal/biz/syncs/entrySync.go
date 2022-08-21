@@ -2,10 +2,8 @@ package syncs
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/yguilai/pipiao-openapi/app/model"
-	"github.com/yguilai/pipiao-openapi/common/collect"
 	"github.com/yguilai/pipiao-openapi/common/xerr"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/stores/redis"
@@ -13,31 +11,31 @@ import (
 
 const (
 	// 定时任务每天跑一次, 缓存过期时间比24h长就行, 这里就先设为48h
-	warframeDictSyncSHARedisExpire = 86400 * 2
+	warframeSyncSHARedisExpire = 86400 * 2
 	// warframeEntryUpdateTaskKey 词典更新redis唯一key, 用于全局分布式锁, 避免同时跑太多任务
 	warframeEntryUpdateTaskKey = "wf:sync_unique_key:entry_update"
 	// warframeEntryUpdateTaskExpire key过期时间, 10分钟
 	warframeEntryUpdateTaskExpire = 60 * 10
 )
 
-type WfEntrySyncService struct {
+type wfEntrySyncService struct {
 	redis *redis.Redis
 	model.WfEntryModel
 }
 
-func NewWfEntrySyncService(r *redis.Redis, m model.WfEntryModel) *WfEntrySyncService {
-	return &WfEntrySyncService{
+func NewWfEntrySyncService(r *redis.Redis, m model.WfEntryModel) SyncService {
+	return &wfEntrySyncService{
 		redis:        r,
 		WfEntryModel: m,
 	}
 }
 
 // NeedFetch 判断是否需要拉取wf词条
-func (s *WfEntrySyncService) NeedFetch(ctx context.Context) (string, string, bool) {
+func (s *wfEntrySyncService) NeedFetch(ctx context.Context) (string, string, bool) {
 	return NeedFetch(ctx, s.redis, WfAllEntry)
 }
 
-func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha string) error {
+func (s *wfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha string) error {
 	lock := redis.NewRedisLock(s.redis, warframeEntryUpdateTaskKey)
 	lock.SetExpire(warframeEntryUpdateTaskExpire)
 	ok, err := lock.AcquireCtx(ctx)
@@ -48,7 +46,7 @@ func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha s
 		return xerr.NewErrorWithMsg("更新任务正在进行中, 请稍后再试~")
 	}
 	defer lock.Release()
-	entries := make(collect.Slice[WfEntry], 0)
+	entries := make([]WfEntry, 0)
 	err = FetchData(downloadUrl, &entries)
 	if err != nil {
 		return xerr.NewErrorWithFormat("获取数据失败: %+v", err)
@@ -58,46 +56,45 @@ func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha s
 		return nil
 	}
 
-	syncPool := NewSyncPool[collect.Slice[WfEntry], WfEntry](1)
+	syncPool := NewSyncPool[WfEntry](1)
 	err = syncPool.SyncAll(ctx, entries, s.doEntryUpdate)
 	if err != nil {
 		return err
 	}
 
-	_ = UpdateLastSHA(ctx, s.redis, WfAllEntry, sha, warframeDictSyncSHARedisExpire)
+	_ = UpdateLastSHA(ctx, s.redis, WfAllEntry, sha, warframeSyncSHARedisExpire)
 	logx.Errorf("更新上次Warframe字典文件SHA失败: %+v", err)
 	return nil
 }
 
-func (s *WfEntrySyncService) FindOld(ctx context.Context, newEntry interface{}) (interface{}, error) {
-	n := newEntry.(*model.WfEntry)
-	return s.FindOneByUniqueName(ctx, n.UniqueName)
+func (s *wfEntrySyncService) FindOld(ctx context.Context, newEntry *model.WfEntry) (*model.WfEntry, error) {
+	return s.FindOneByUniqueName(ctx, newEntry.UniqueName)
 }
 
-func (s *WfEntrySyncService) Add(ctx context.Context, e interface{}) (sql.Result, error) {
-	entry := e.(*model.WfEntry)
-	return s.Insert(ctx, entry)
+func (s *wfEntrySyncService) Modify(ctx context.Context, oldEntry, newEntry *model.WfEntry) error {
+	newEntry.Id = oldEntry.Id
+	return s.Update(ctx, newEntry)
 }
 
-func (s *WfEntrySyncService) Modify(ctx context.Context, oldEntry, newEntry interface{}) error {
-	n := newEntry.(*model.WfEntry)
-	o := oldEntry.(*model.WfEntry)
-	n.Id = o.Id
-	return s.Update(ctx, n)
-}
-
-func (s *WfEntrySyncService) NeedModify(oldEntry, newEntry interface{}) bool {
-	if oldEntry == nil {
+func (s *wfEntrySyncService) NeedModify(o, n *model.WfEntry) bool {
+	if o == nil || n == nil {
 		return true
 	}
-	o := oldEntry.(*model.WfEntry)
-	n := newEntry.(*model.WfEntry)
 	newKey := fmt.Sprintf("%s%s%s%d", n.UniqueName, n.Name, n.Category, n.Tradable)
 	oldKey := fmt.Sprintf("%s%s%s%d", o.UniqueName, o.Name, o.Category, o.Tradable)
 	return NeedUpdate(oldKey, newKey)
 }
 
-func (s *WfEntrySyncService) doEntryUpdate(ctx context.Context, e *WfEntry, errch chan<- error) {
+func (s *wfEntrySyncService) newCommonSync() *CommonSync[model.WfEntry] {
+	return &CommonSync[model.WfEntry]{
+		FindOld:    s.FindOld,
+		Insert:     s.Insert,
+		Modify:     s.Modify,
+		NeedModify: s.NeedModify,
+	}
+}
+
+func (s *wfEntrySyncService) doEntryUpdate(ctx context.Context, e *WfEntry, errch chan<- error) {
 	if e.UniqueName == "" {
 		return
 	}
@@ -107,7 +104,7 @@ func (s *WfEntrySyncService) doEntryUpdate(ctx context.Context, e *WfEntry, errc
 		Name:       e.Name,
 		Tradable:   transferTradable(e.Tradable),
 	}
-	DoUpdate(ctx, s, newEntry, errch)
+	DoUpdate[model.WfEntry](ctx, s.newCommonSync(), newEntry, errch)
 }
 
 func transferTradable(tradable bool) int64 {

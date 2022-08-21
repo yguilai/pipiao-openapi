@@ -14,7 +14,7 @@ type TriggerEntryLogic struct {
 	logx.Logger
 	ctx          context.Context
 	svcCtx       *svc.ServiceContext
-	entryService *syncs.WfEntrySyncService
+	entryService syncs.SyncService
 }
 
 func NewTriggerEntryLogic(ctx context.Context, svcCtx *svc.ServiceContext) *TriggerEntryLogic {

@@ -15,7 +15,7 @@ type WfI18nSyncTask struct {
 	ctx        context.Context
 	svcCtx     *svc.ServiceContext
 	task       *cron.Cron
-	syncHelper *syncs.WfI18nItemService
+	syncHelper syncs.SyncService
 }
 
 func NewWfI18nSyncTask(ctx context.Context, svcCtx *svc.ServiceContext) *WfI18nSyncTask {
