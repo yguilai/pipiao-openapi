@@ -9,4 +9,5 @@ import (
 
 func RegisterJobs(group *service.ServiceGroup, svcCtx *svc.ServiceContext) {
 	group.Add(cron.NewWfEntrySyncTask(context.Background(), svcCtx))
+	group.Add(cron.NewWfI18nSyncTask(context.Background(), svcCtx))
 }
