@@ -48,8 +48,8 @@ func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha s
 		return xerr.NewErrorWithMsg("更新任务正在进行中, 请稍后再试~")
 	}
 	defer lock.Release()
-	entries := make(collect.Slice[model.WfEntry], 0)
-	err = FetchData(downloadUrl, entries)
+	entries := make(collect.Slice[WfEntry], 0)
+	err = FetchData(downloadUrl, &entries)
 	if err != nil {
 		return xerr.NewErrorWithFormat("获取数据失败: %+v", err)
 	}
@@ -58,7 +58,7 @@ func (s *WfEntrySyncService) StartUpdate(ctx context.Context, downloadUrl, sha s
 		return nil
 	}
 
-	syncPool := NewSyncPool[collect.Slice[model.WfEntry], model.WfEntry](5)
+	syncPool := NewSyncPool[collect.Slice[WfEntry], WfEntry](1)
 	err = syncPool.SyncAll(ctx, entries, s.doEntryUpdate)
 	if err != nil {
 		return err
@@ -87,6 +87,9 @@ func (s *WfEntrySyncService) Modify(ctx context.Context, oldEntry, newEntry inte
 }
 
 func (s *WfEntrySyncService) NeedModify(oldEntry, newEntry interface{}) bool {
+	if oldEntry == nil {
+		return true
+	}
 	o := oldEntry.(*model.WfEntry)
 	n := newEntry.(*model.WfEntry)
 	newKey := fmt.Sprintf("%s%s%s%d", n.UniqueName, n.Name, n.Category, n.Tradable)
@@ -94,6 +97,22 @@ func (s *WfEntrySyncService) NeedModify(oldEntry, newEntry interface{}) bool {
 	return NeedUpdate(oldKey, newKey)
 }
 
-func (s *WfEntrySyncService) doEntryUpdate(ctx context.Context, e *model.WfEntry, errch chan<- error) {
-	DoUpdate(ctx, s, e, errch)
+func (s *WfEntrySyncService) doEntryUpdate(ctx context.Context, e *WfEntry, errch chan<- error) {
+	if e.UniqueName == "" {
+		return
+	}
+	newEntry := &model.WfEntry{
+		UniqueName: e.UniqueName,
+		Category:   e.Category,
+		Name:       e.Name,
+		Tradable:   transferTradable(e.Tradable),
+	}
+	DoUpdate(ctx, s, newEntry, errch)
+}
+
+func transferTradable(tradable bool) int64 {
+	if tradable {
+		return 1
+	}
+	return 0
 }

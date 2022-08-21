@@ -16,7 +16,7 @@ create table openapi_auth
 create table wf_i18n_item
 (
     `id`          bigint(20)   not null auto_increment comment '自增id',
-    `unique_name` varchar(100) not null default '' comment '词条键',
+    `unique_name` varchar(150) not null default '' comment '词条键',
     `lang`        varchar(10)  not null default '' comment '语言缩写',
     `name`        varchar(50)  not null default '' comment '词条名称',
     `create_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -30,7 +30,7 @@ create table wf_i18n_item
 create table wf_entry
 (
     `id`          bigint(20)   not null auto_increment comment '自增id',
-    `unique_name` varchar(100) not null default '' comment 'wf词条全局唯一名称',
+    `unique_name` varchar(150) not null default '' comment 'wf词条全局唯一名称',
     `category`    varchar(10)  not null default '' comment '词条分类',
     `name`        varchar(50)  not null default '' comment '词条英文名',
     `tradable`    tinyint(1)   not null default 0 comment '是否能交易',

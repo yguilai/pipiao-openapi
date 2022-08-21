@@ -71,7 +71,8 @@ func genSyncTypeKey(syncType SyncType) string {
 }
 
 func FetchData(downloadUrl string, v interface{}) error {
-	resp, err := http.Get(downloadUrl)
+	client := &http.Client{Timeout: 0}
+	resp, err := client.Get(downloadUrl)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func FetchData(downloadUrl string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(bytes, &v)
+	err = json.Unmarshal(bytes, v)
 	if err != nil {
 		return err
 	}
@@ -98,7 +99,7 @@ func DoUpdate(ctx context.Context, m CommonSyncModel, newEntry interface{}, errc
 		return
 	}
 	// 说明是新增的
-	if oldEntry == nil {
+	if err == model.ErrNotFound {
 		res, err := m.Add(ctx, newEntry)
 		if err != nil {
 			errch <- err
