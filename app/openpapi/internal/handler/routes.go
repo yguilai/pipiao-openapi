@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	translate "github.com/yguilai/pipiao-openapi/app/openpapi/internal/handler/translate"
+	trigger "github.com/yguilai/pipiao-openapi/app/openpapi/internal/handler/trigger"
 	"github.com/yguilai/pipiao-openapi/app/openpapi/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -29,8 +30,13 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/trigger",
-				Handler: translate.TriggerHandler(serverCtx),
+				Path:    "/trigger/entry",
+				Handler: trigger.TriggerEntryHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/trigger/i18n",
+				Handler: trigger.TriggerI18nHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/wf/v1"),

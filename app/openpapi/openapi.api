@@ -23,10 +23,14 @@ service openapi {
 
 @server(
 	prefix: /wf/v1
-	group: translate
+	group: trigger
 )
 service openapi {
 	@doc "Warframe词条更新触发"
-	@handler Trigger
-	get /trigger returns (TranslateResp)
+	@handler TriggerEntry
+	get /trigger/entry returns (TranslateResp)
+	
+	@doc "Warframe词条i18n更新触发"
+	@handler TriggerI18n
+	get /trigger/i18n returns (TranslateResp)
 }

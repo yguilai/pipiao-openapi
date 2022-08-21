@@ -7,19 +7,25 @@ type (
 
 	Map[T comparable, U any] map[T]U
 
+	Entry[T comparable, U any] struct {
+		Key   T
+		Value U
+	}
+
 	Iterator[T any] interface {
 		It() <-chan T
 	}
 )
 
-func (m Map[T, U]) It() <-chan U {
-	r := make(chan U, 1)
-	threading.GoSafe(func() {
-		for _, t := range m {
-			r <- t
-		}
-	})
-	return r
+func (m Map[T, U]) Entries() Slice[Entry[T, U]] {
+	es := make(Slice[Entry[T, U]], len(m))
+	for k, v := range m {
+		es = append(es, Entry[T, U]{
+			Key:   k,
+			Value: v,
+		})
+	}
+	return es
 }
 
 func (s Slice[T]) It() <-chan T {
