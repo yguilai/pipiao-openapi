@@ -23,7 +23,7 @@ create table wf_i18n_item
     `update_time` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uni_idx_key_lang` (`unique_name`, `lang`),
-    UNIQUE KEY `uni_idx_name_lang` (`name`, `lang`)
+    KEY `idx_name_lang` (`name`, `lang`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = UTF8MB4 COMMENT ='warframe词条国际化表';
 

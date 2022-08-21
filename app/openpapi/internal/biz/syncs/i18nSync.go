@@ -61,14 +61,14 @@ func (s *WfI18nItemService) StartUpdate(ctx context.Context, downloadUrl, sha st
 		return err
 	}
 
-	_ = UpdateLastSHA(ctx, s.redis, WfAllEntry, sha, warframeDictSyncSHARedisExpire)
+	_ = UpdateLastSHA(ctx, s.redis, WfI18n, sha, warframeDictSyncSHARedisExpire)
 	logx.Errorf("更新上次Warframe字典文件SHA失败: %+v", err)
 	return nil
 }
 
 func (s *WfI18nItemService) FindOld(ctx context.Context, newEntry interface{}) (interface{}, error) {
 	n := newEntry.(*model.WfI18nItem)
-	return s.FindOneByNameLang(ctx, n.UniqueName, n.Lang)
+	return s.FindOneByUniqueNameLang(ctx, n.UniqueName, n.Lang)
 }
 
 func (s *WfI18nItemService) Add(ctx context.Context, newEntry interface{}) (sql.Result, error) {
