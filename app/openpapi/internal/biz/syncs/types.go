@@ -20,9 +20,11 @@ type (
 		SystemName string `json:"systemName"`
 	}
 
-	// SyncService 对
+	// SyncService 对同步业务进行约束
 	SyncService interface {
+		// NeedFetch 判断是否需要拉取数据
 		NeedFetch(ctx context.Context) (string, string, bool)
+		// StartUpdate 执行拉取
 		StartUpdate(ctx context.Context, downloadUrl, sha string) error
 	}
 
